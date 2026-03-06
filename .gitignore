@@ -19,3 +19,4 @@ Thumbs.db
 **/application-secret.yml
 **/application-secret.yaml
 **/config/*.local.properties
+config/application-global.properties

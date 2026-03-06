@@ -588,6 +588,12 @@
                     badge.textContent = '离线';
                     badge.className = 'status-badge offline';
                 }
+                const headerDesc = document.querySelector('.header p');
+                if (headerDesc) {
+                    const ds = data.dashscopeApiKeyConfigured ? `已配置(${data.dashscopeApiKeyMasked || '****'})` : '未配置';
+                    const amap = data.amapApiKeyConfigured ? `已配置(${data.amapApiKeyMasked || '****'})` : '未配置';
+                    headerDesc.textContent = `DashScope Key: ${ds} | AMap Key: ${amap}`;
+                }
             } catch (error) {
                 console.error('Status check failed:', error);
             }

@@ -10,6 +10,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,10 @@ public class GaodeRagController {
     private final ChatClient chatClient;
     private final WeatherService weatherService;
     private final StockService stockService;
+    @Value("${spring.ai.dashscope.api-key:}")
+    private String dashscopeApiKey;
+    @Value("${spring.ai.weather.amap.key:}")
+    private String amapApiKey;
     // 复用同一个 retriever，避免每次请求重复创建
     private final DocumentRetriever retriever;
 
@@ -77,7 +82,22 @@ public class GaodeRagController {
         Map<String, Object> health = new HashMap<>();
         health.put("status", "UP");
         health.put("service", "SAA-19GaodeRag");
+        health.put("dashscopeApiKeyConfigured", dashscopeApiKey != null && !dashscopeApiKey.isBlank());
+        health.put("dashscopeApiKeyMasked", maskKey(dashscopeApiKey));
+        health.put("amapApiKeyConfigured", amapApiKey != null && !amapApiKey.isBlank());
+        health.put("amapApiKeyMasked", maskKey(amapApiKey));
         return health;
+    }
+
+    private String maskKey(String key) {
+        if (key == null || key.isBlank()) {
+            return "NOT_SET";
+        }
+        int len = key.length();
+        if (len <= 8) {
+            return "****";
+        }
+        return key.substring(0, 4) + "****" + key.substring(len - 4);
     }
 
     /**
