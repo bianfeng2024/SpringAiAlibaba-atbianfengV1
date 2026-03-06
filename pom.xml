@@ -8,7 +8,7 @@
     <artifactId>SpringAiAlibaba-atbianfengV1</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>SpringAIAlibaba-Maven鐖跺伐绋婸OM閰嶇疆</name>
+    <name>SpringAiAlibaba-atbianfengV1</name>
 
     <modules>
         <module>SAA-01HelloWorld</module>
@@ -91,7 +91,7 @@
     <repositories>
         <repository>
             <id>spring-milestones</id>
-            <name>Spring Milestones</name>
+            <name>SpringAiAlibaba-atbianfengV1</name>
             <url>https://repo.spring.io/milestone</url>
             <snapshots>
                 <enabled>false</enabled>
@@ -100,6 +100,7 @@
     </repositories>
 
 </project>
+
 
 
 
