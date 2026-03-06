@@ -1,20 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.atguigu.study</groupId>
-        <artifactId>SpringAIAlibaba-atguiguV1</artifactId>
+        <artifactId>SpringAiAlibaba-atbianfengV1</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>SAA-17BailianRAG</artifactId>
 
         <!-- 
-        如果你在学习的过程中有疑惑的地方，欢迎你通过邮箱留言给阳哥。
-		邮箱：zzyybs@126.com我们一起迭代出更好的课程！谢谢你选择尚硅谷
-        -->
+        濡傛灉浣犲湪瀛︿範鐨勮繃绋嬩腑鏈夌枒鎯戠殑鍦版柟锛屾杩庝綘閫氳繃閭鐣欒█缁欓槼鍝ャ€?		閭锛歾zyybs@126.com鎴戜滑涓€璧疯凯浠ｅ嚭鏇村ソ鐨勮绋嬶紒璋㈣阿浣犻€夋嫨灏氱璋?        -->
         
     <dependencies>
         <dependency>

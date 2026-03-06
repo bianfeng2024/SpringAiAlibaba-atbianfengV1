@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.atguigu.study</groupId>
-        <artifactId>SpringAIAlibaba-atguiguV1</artifactId>
+        <artifactId>SpringAiAlibaba-atbianfengV1</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
@@ -13,14 +13,10 @@
     <artifactId>SAA-14LocalMcpServer</artifactId>
 
         <!-- 
-        如果你在学习的过程中有疑惑的地方，欢迎你通过邮箱留言给阳哥。
-		邮箱：zzyybs@126.com我们一起迭代出更好的课程！谢谢你选择尚硅谷
-        -->
+        濡傛灉浣犲湪瀛︿範鐨勮繃绋嬩腑鏈夌枒鎯戠殑鍦版柟锛屾杩庝綘閫氳繃閭鐣欒█缁欓槼鍝ャ€?		閭锛歾zyybs@126.com鎴戜滑涓€璧疯凯浠ｅ嚭鏇村ソ鐨勮绋嬶紒璋㈣阿浣犻€夋嫨灏氱璋?        -->
     <dependencies>
-        <!--注意事项（重要）
-            spring-ai-starter-mcp-server-webflux不能和<artifactId>spring-boot-starter-web</artifactId>依赖并存，
-            否则会使用tomcat启动,而不是netty启动，从而导致mcpserver启动失败，但程序运行是正常的，mcp客户端连接不上。
-        -->
+        <!--娉ㄦ剰浜嬮」锛堥噸瑕侊級
+            spring-ai-starter-mcp-server-webflux涓嶈兘鍜?artifactId>spring-boot-starter-web</artifactId>渚濊禆骞跺瓨锛?            鍚﹀垯浼氫娇鐢╰omcat鍚姩,鑰屼笉鏄痭etty鍚姩锛屼粠鑰屽鑷磎cpserver鍚姩澶辫触锛屼絾绋嬪簭杩愯鏄甯哥殑锛宮cp瀹㈡埛绔繛鎺ヤ笉涓娿€?        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
