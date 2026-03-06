@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAA-19 高德RAG智能助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .message.bot .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #28a745;
+            color: white;
+            order: 2;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: scale(1.05);
+        }
+
+        #sendBtn:active {
+            transform: scale(0.95);
+        }
+
+        .weather-container {
+            padding: 30px;
+            display: none;
+        }
+
+        .weather-container.active {
+            display: block;
+        }
+
+        .weather-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .weather-input input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .weather-input input:focus {
+            border-color: #667eea;
+        }
+
+        .weather-input button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .weather-result {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .weather-city {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .weather-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .weather-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .weather-item label {
+            display: block;
+            color: #6c757d;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .weather-item span {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .streaming-text {
+            display: inline;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status-badge.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* === 股票面板 === */
+        .stock-container {
+            padding: 24px;
+            display: none;
+        }
+
+        .stock-container.active {
+            display: block;
+        }
+
+        .stock-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stock-search input {
+            flex: 1;
+            padding: 13px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color .3s;
+        }
+
+        .stock-search input:focus {
+            border-color: #667eea;
+        }
+
+        .stock-search button {
+            padding: 13px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .2s;
+        }
+
+        .stock-search button:hover {
+            transform: scale(1.04);
+        }
+
+        .stock-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 5px 14px;
+            border: 1.5px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 行情卡片 */
+        .quote-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .quote-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .quote-name {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .quote-code {
+            font-size: 13px;
+            opacity: .7;
+            margin-top: 4px;
+        }
+
+        .quote-price {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .quote-change {
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .quote-change.up {
+            color: #ff6b6b;
+        }
+
+        .quote-change.down {
+            color: #51cf66;
+        }
+
+        .quote-price.up {
+            color: #ff6b6b;
+        }
+
+        .quote-price.down {
+            color: #51cf66;
+        }
+
+        .quote-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, .15);
+        }
+
+        .quote-detail-item label {
+            display: block;
+            font-size: 11px;
+            opacity: .6;
+            margin-bottom: 4px;
+        }
+
+        .quote-detail-item span {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* 历史记录表格 */
+        .history-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
+        }
+
+        .stock-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .stock-table td {
+            padding: 11px 14px;
+            text-align: center;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .stock-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .stock-table tr:hover td {
+            background: #f8f9ff;
+        }
+
+        .stock-table td.up {
+            color: #e03131;
+            font-weight: 600;
+        }
+
+        .stock-table td.down {
+            color: #2f9e44;
+            font-weight: 600;
+        }
+
+        .stock-error {
+            text-align: center;
+            padding: 30px;
+            color: #e03131;
+            background: #fff5f5;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 高德RAG智能助手 <span id="statusBadge" class="status-badge offline">离线</span></h1>
+            <p>结合高德天气API和百炼RAG的智能对话系统</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('chat')">💬 普通对话</button>
+            <button class="tab" onclick="switchTab('rag')">📚 RAG对话</button>
+            <button class="tab" onclick="switchTab('weather')">🌤️ 天气查询</button>
+            <button class="tab" onclick="switchTab('stock')">📈 股票查询</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    你好！我是小通，你的智能助手。我可以：<br><br>
+                    ✅ 回答各种问题<br>
+                    ✅ 查询城市天气<br>
+                    ✅ 基于知识库回答专业问题<br><br>
+                    请问有什么可以帮助你的？
+                </div>
+            </div>
+        </div>
+
+        <div class="weather-container" id="weatherContainer">
+            <div class="weather-input">
+                <input type="text" id="cityInput" placeholder="输入城市名称，如：北京">
+                <button onclick="queryWeather()">查询天气</button>
+            </div>
+            <div class="weather-result" id="weatherResult"></div>
+        </div>
+
+        <!-- 股票查询面板 -->
+        <div class="stock-container" id="stockContainer">
+            <div class="stock-search">
+                <input type="text" id="stockInput" placeholder="输入股票代码（如 sh600519）或名称（如 茅台）"
+                    onkeypress="if(event.key==='Enter') queryStock()">
+                <button onclick="queryStock()">查询</button>
+            </div>
+            <div class="stock-presets" id="stockPresets"></div>
+            <div id="stockResult"></div>
+        </div>
+
+        <div class="input-container" id="inputContainer">
+            <input type="text" id="messageInput" placeholder="输入你的消息..." onkeypress="handleKeyPress(event)">
+            <button id="sendBtn" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/ai';
+        let currentTab = 'chat';
+        let currentMode = 'stream'; // 'stream' or 'normal'
+
+        // 检查服务状态
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                const badge = document.getElementById('statusBadge');
+                if (data.status === 'UP') {
+                    badge.textContent = '在线';
+                    badge.className = 'status-badge online';
+                } else {
+                    badge.textContent = '离线';
+                    badge.className = 'status-badge offline';
+                }
+            } catch (error) {
+                console.error('Status check failed:', error);
+            }
+        }
+
+        // 切换标签页
+        function switchTab(tab) {
+            currentTab = tab;
+
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const chatContainer = document.getElementById('chatContainer');
+            const weatherContainer = document.getElementById('weatherContainer');
+            const stockContainer = document.getElementById('stockContainer');
+            const inputContainer = document.getElementById('inputContainer');
+
+            // 先全部隐藏
+            chatContainer.style.display = 'none';
+            weatherContainer.classList.remove('active');
+            stockContainer.classList.remove('active');
+            inputContainer.style.display = 'none';
+
+            if (tab === 'weather') {
+                weatherContainer.classList.add('active');
+            } else if (tab === 'stock') {
+                stockContainer.classList.add('active');
+            } else {
+                chatContainer.style.display = 'block';
+                inputContainer.style.display = 'flex';
+                chatContainer.innerHTML = '';
+                if (tab === 'chat') {
+                    currentMode = 'stream';
+                    addBotMessage('你好！我是小通，你的智能助手。我可以回答各种问题和查询城市天气，请问有什么可以帮助你的？');
+                } else {
+                    currentMode = 'rag';
+                    addBotMessage('你好！我是小通，已开启RAG模式。我会结合知识库来回答你的专业问题。');
+                }
+            }
+        }
+
+        // 添加用户消息
+        function addUserMessage(content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(content)}</div>
+                <div class="message-avatar">👤</div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 添加机器人消息
+        function addBotMessage(content) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">${content}</div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 添加流式消息（带打字动画）
+        function addStreamingMessage() {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv;
+        }
+
+        // 更新流式消息内容
+        function updateStreamingMessage(messageDiv, content) {
+            const contentDiv = messageDiv.querySelector('.message-content');
+            contentDiv.innerHTML = formatResponse(content);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addUserMessage(message);
+            input.value = '';
+
+            const messageDiv = addStreamingMessage();
+
+            try {
+                let url;
+                if (currentMode === 'stream') {
+                    if (currentTab === 'chat') {
+                        url = `${API_BASE}/chat/stream?message=${encodeURIComponent(message)}`;
+                    } else {
+                        url = `${API_BASE}/rag/chat/stream?msg=${encodeURIComponent(message)}`;
+                    }
+
+                    // 流式响应
+                    const response = await fetch(url);
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullContent = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+
+                        for (const line of lines) {
+                            // 剥掉 SSE 协议的 "data:" 前缀
+                            let text = line;
+                            if (text.startsWith('data:')) {
+                                text = text.slice(5);
+                            }
+                            if (text.trim()) {
+                                fullContent += text;
+                                updateStreamingMessage(messageDiv, fullContent);
+                            }
+                        }
+                    }
+                } else {
+                    // 非流式响应
+                    if (currentTab === 'chat') {
+                        url = `${API_BASE}/chat?message=${encodeURIComponent(message)}`;
+                    } else {
+                        url = `${API_BASE}/rag/chat?msg=${encodeURIComponent(message)}`;
+                    }
+
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateStreamingMessage(messageDiv, data.response);
+                    } else {
+                        updateStreamingMessage(messageDiv, '抱歉，发生错误：' + data.error);
+                    }
+                }
+            } catch (error) {
+                updateStreamingMessage(messageDiv, '抱歉，发生错误：' + error.message);
+            }
+        }
+
+        // 查询天气
+        async function queryWeather() {
+            const city = document.getElementById('cityInput').value.trim();
+            if (!city) {
+                alert('请输入城市名称');
+                return;
+            }
+
+            const resultDiv = document.getElementById('weatherResult');
+            resultDiv.innerHTML = '<div class="loading">正在查询天气...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/weather?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const weather = data.data;
+                    resultDiv.innerHTML = `
+                        <div class="weather-city">${weather.city}</div>
+                        <div class="weather-info">
+                            <div class="weather-item">
+                                <label>天气状况</label>
+                                <span>${weather.weather}</span>
+                            </div>
+                            <div class="weather-item">
+                                <label>温度</label>
+                                <span>${weather.temperature}°C</span>
+                            </div>
+                            <div class="weather-item">
+                                <label>风向</label>
+                                <span>${weather.winddirection} ${weather.windpower}</span>
+                            </div>
+                            <div class="weather-item">
+                                <label>湿度</label>
+                                <span>${weather.humidity}</span>
+                            </div>
+                            <div class="weather-item">
+                                <label>更新时间</label>
+                                <span>${weather.reporttime}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p style="text-align:center;color:red;">查询失败，请稍后重试</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="text-align:center;color:red;">查询失败：' + error.message + '</p>';
+            }
+        }
+
+        // 处理回车键
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化响应（只保留中文字符、常用标点和数字符号）
+        function formatResponse(text) {
+            const cleaned = text.replace(/[^\u4e00-\u9fff\u3000-\u303f\uff00-\uffef\u2014\u2013\u201c\u201d\u2018\u2019，。！？、；：""''（）【】…—～·\d\s\n.%+\-,:\/]/g, '');
+            return escapeHtml(cleaned).replace(/\n/g, '<br>');
+        }
+
+        // ===================== 股票查询 =====================
+
+        async function loadStockPresets() {
+            try {
+                const resp = await fetch('/stock/presets');
+                const data = await resp.json();
+                const container = document.getElementById('stockPresets');
+                container.innerHTML = Object.entries(data).map(([name, code]) =>
+                    `<button class="preset-btn" onclick="queryStockByCode('${code}', '${name}')">${name}</button>`
+                ).join('');
+            } catch (e) {
+                console.warn('加载预设股票失败', e);
+            }
+        }
+
+        function queryStockByCode(code, name) {
+            document.getElementById('stockInput').value = name || code;
+            queryStock();
+        }
+
+        async function queryStock() {
+            const input = document.getElementById('stockInput').value.trim();
+            if (!input) { alert('请输入股票代码或名称'); return; }
+
+            const resultDiv = document.getElementById('stockResult');
+            resultDiv.innerHTML = '<div class="loading">正在查询中，请稍候...</div>';
+
+            try {
+                const code = encodeURIComponent(input);
+                const [quoteResp, historyResp] = await Promise.all([
+                    fetch(`/stock/quote?code=${code}`),
+                    fetch(`/stock/history?code=${code}&days=10`)
+                ]);
+                const quote = await quoteResp.json();
+                const history = await historyResp.json();
+
+                resultDiv.innerHTML = renderQuote(quote) + renderHistory(history);
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="stock-error">查询失败：${e.message}</div>`;
+            }
+        }
+
+        function renderQuote(q) {
+            if (q.error) {
+                return `<div class="stock-error">${q.message || '查询失败'}</div>`;
+            }
+            const dir = q.upDown || 'up';
+            return `
+            <div class="quote-card">
+                <div class="quote-header">
+                    <div>
+                        <div class="quote-name">${q.name || q.code}</div>
+                        <div class="quote-code">${q.code} · ${q.date} ${q.time}</div>
+                    </div>
+                    <div style="text-align:right">
+                        <div class="quote-price ${dir}">${q.price}</div>
+                        <div class="quote-change ${dir}">${q.change} (${q.changePercent})</div>
+                    </div>
+                </div>
+                <div class="quote-details">
+                    <div class="quote-detail-item"><label>今开</label><span>${q.open}</span></div>
+                    <div class="quote-detail-item"><label>昨收</label><span>${q.preClose}</span></div>
+                    <div class="quote-detail-item"><label>最高</label><span class="up">${q.high}</span></div>
+                    <div class="quote-detail-item"><label>最低</label><span class="down">${q.low}</span></div>
+                    <div class="quote-detail-item"><label>成交量</label><span>${q.volume}</span></div>
+                    <div class="quote-detail-item"><label>成交额</label><span>${q.amount}</span></div>
+                </div>
+            </div>`;
+        }
+
+        function renderHistory(h) {
+            if (h.error) {
+                return `<div class="stock-error" style="margin-top:12px">${h.message || '历史数据查询失败'}</div>`;
+            }
+            const rows = (h.records || []).slice().reverse().map(r => {
+                const pct = parseFloat(r.changePercent) || 0;
+                const cls = pct >= 0 ? 'up' : 'down';
+                return `<tr>
+                    <td>${r.date}</td>
+                    <td>${r.open}</td>
+                    <td>${r.close}</td>
+                    <td class="up">${r.high}</td>
+                    <td class="down">${r.low}</td>
+                    <td>${r.volume}</td>
+                    <td class="${cls}">${r.changePercent || '-'}</td>
+                </tr>`;
+            }).join('');
+            return `
+            <div class="history-section" style="margin-top:8px">
+                <h3>📋 近期交易记录（${h.count} 条）</h3>
+                <table class="stock-table">
+                    <thead><tr>
+                        <th>日期</th><th>开盘</th><th>收盘</th>
+                        <th>最高</th><th>最低</th><th>成交量</th><th>涨跌幅</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+        }
+
+        // ===================== 初始化 =====================
+        window.onload = function () {
+            checkStatus();
+            setInterval(checkStatus, 30000);
+            loadStockPresets();
+        };
+    </script>
+</body>
+
+</html>

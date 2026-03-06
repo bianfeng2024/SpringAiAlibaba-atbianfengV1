@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 聊天助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .chat-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .status-badge {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .tab-content {
+            display: none;
+            flex-direction: column;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .messages-container {
+            height: 420px;
+            overflow-y: auto;
+            padding: 20px;
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            animation: messageIn 0.4s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.ai {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 6px;
+            border: 1px solid #eee;
+        }
+
+        .message.ai .message-content.streaming {
+            border: 2px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 6px;
+            padding: 0 4px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #667eea;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0;
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        .weather-messages {
+            padding: 20px;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            animation: weatherIn 0.5s ease;
+        }
+
+        @keyframes weatherIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .weather-card .city {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .weather-card .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .weather-card .weather-icon {
+            font-size: 4rem;
+        }
+
+        .weather-card .temp {
+            font-size: 3rem;
+            font-weight: 300;
+        }
+
+        .weather-card .weather-desc {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .weather-card .weather-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .weather-detail {
+            text-align: center;
+        }
+
+        .weather-detail .label {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .weather-detail .value {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .weather-card .update-time {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 12px;
+            text-align: right;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .quick-cities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .city-tag {
+            padding: 6px 14px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            color: #555;
+        }
+
+        .city-tag:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:active {
+            transform: translateY(0);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            display: inline-block;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .welcome-message .icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .welcome-message p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .streaming-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            color: #667eea;
+            margin-left: 8px;
+        }
+
+        .streaming-indicator::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 AI 聊天助手</h1>
+            <p>基于 Spring AI Alibaba · 通义千问</p>
+            <div class="status-badge">
+                <span class="status-dot"></span>在线
+            </div>
+        </div>
+        
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('chat')">💬 AI对话</button>
+            <button class="tab-btn" onclick="switchTab('weather')">🌤️ 天气查询</button>
+        </div>
+        
+        <div class="tab-content active" id="chatTab">
+            <div class="messages-container" id="chatMessages">
+                <div class="welcome-message">
+                    <div class="icon">👋</div>
+                    <p>你好！我是AI助手<br>有什么可以帮你的吗？</p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-group">
+                    <input type="text" class="chat-input" id="userInput" 
+                           placeholder="输入消息..." 
+                           onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="weatherTab">
+            <div class="messages-container weather-messages" id="weatherMessages">
+                <div class="welcome-message">
+                    <div class="icon">🌤️</div>
+                    <p>输入城市名称<br>查询实时天气</p>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="quick-cities">
+                    <button class="city-tag" onclick="queryWeather('北京')">北京</button>
+                    <button class="city-tag" onclick="queryWeather('上海')">上海</button>
+                    <button class="city-tag" onclick="queryWeather('广州')">广州</button>
+                    <button class="city-tag" onclick="queryWeather('深圳')">深圳</button>
+                    <button class="city-tag" onclick="queryWeather('杭州')">杭州</button>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="chat-input" id="cityInput" 
+                           placeholder="输入城市名称..."
+                           onkeypress="handleCityKeyPress(event)">
+                    <button class="weather-btn send-btn" onclick="queryWeather(document.getElementById('cityInput').value)">查询</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <span><span class="status-dot"></span>服务正常运行</span>
+            <span id="apiStatus">支持流式输出</span>
+        </div>
+    </div>
+
+    <script>
+        // Chat functionality
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        let eventSource = null;
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 关闭之前的流式连接
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // 禁用发送按钮
+            sendBtn.disabled = true;
+
+            addMessage(message, 'user', new Date());
+            userInput.value = '';
+
+            // 创建AI消息容器
+            const aiMessageDiv = createAIMessageContainer();
+            
+            try {
+                // 使用Fetch API进行SSE流式读取
+                const response = await fetch(`/ai/chat/stream?message=${encodeURIComponent(message)}`);
+                
+                if (!response.ok) {
+                    throw new Error('请求失败');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let aiContent = '';
+
+                // 标记为流式显示
+                aiMessageDiv.querySelector('.message-content').classList.add('streaming');
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) {
+                        break;
+                    }
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    aiContent += chunk;
+                    
+                    // 更新AI消息内容
+                    updateAIMessage(aiMessageDiv, aiContent);
+                }
+
+                // 流式结束
+                aiMessageDiv.querySelector('.message-content').classList.remove('streaming');
+                
+            } catch (error) {
+                console.error('流式读取错误:', error);
+                aiMessageDiv.querySelector('.message-content').classList.remove('streaming');
+                addMessage('抱歉，发生错误: ' + error.message, 'ai', new Date());
+            } finally {
+                sendBtn.disabled = false;
+            }
+
+            scrollToBottom();
+        }
+
+        function createAIMessageContainer() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            messageDiv.innerHTML = `
+                <div class="message-content"></div>
+                <div class="message-time"></div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            return messageDiv;
+        }
+
+        function updateAIMessage(messageDiv, content) {
+            const contentDiv = messageDiv.querySelector('.message-content');
+            contentDiv.innerHTML = escapeHtml(content) + '<span class="cursor"></span>';
+            scrollToBottom();
+        }
+
+        function addMessage(content, type, time) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(content)}</div>
+                <div class="message-time">${formatTime(time)}</div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        // Weather functionality
+        const weatherMessages = document.getElementById('weatherMessages');
+
+        async function queryWeather(city) {
+            if (!city || !city.trim()) {
+                return;
+            }
+
+            city = city.trim();
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai';
+            loadingDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            weatherMessages.appendChild(loadingDiv);
+            scrollToWeatherBottom();
+
+            try {
+                const response = await fetch(`/weather/query?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+
+                loadingDiv.remove();
+
+                if (data.success) {
+                    displayWeatherCard(data.data);
+                    document.getElementById('apiStatus').textContent = '天气数据来源: 高德API';
+                } else {
+                    addWeatherMessage('查询失败: ' + data.message, 'ai');
+                }
+            } catch (error) {
+                loadingDiv.remove();
+                addWeatherMessage('网络错误，请稍后重试', 'ai');
+            }
+        }
+
+        function displayWeatherCard(weather) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'weather-card';
+            cardDiv.innerHTML = `
+                <div class="city">📍 ${escapeHtml(weather.city)}</div>
+                <div class="weather-main">
+                    <span class="weather-icon">${getWeatherEmoji(weather.weather)}</span>
+                    <div>
+                        <div class="temp">${escapeHtml(weather.temperature)}°C</div>
+                        <div class="weather-desc">${escapeHtml(weather.weather)}</div>
+                    </div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <div class="label">风向</div>
+                        <div class="value">${escapeHtml(weather.winddirection)}</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="label">风力</div>
+                        <div class="value">${escapeHtml(weather.windpower || '未知')}</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="label">湿度</div>
+                        <div class="value">${escapeHtml(weather.humidity || '未知')}%</div>
+                    </div>
+                </div>
+                <div class="update-time">更新时间: ${escapeHtml(weather.reporttime)}</div>
+            `;
+            weatherMessages.appendChild(cardDiv);
+            scrollToWeatherBottom();
+        }
+
+        function addWeatherMessage(content, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = `<div class="message-content">${escapeHtml(content)}</div>`;
+            weatherMessages.appendChild(messageDiv);
+            scrollToWeatherBottom();
+        }
+
+        function scrollToWeatherBottom() {
+            weatherMessages.scrollTop = weatherMessages.scrollHeight;
+        }
+
+        function getWeatherEmoji(weather) {
+            if (!weather) return '🌤️';
+            const map = {
+                '晴': '☀️',
+                '多云': '⛅',
+                '阴': '☁️',
+                '小雨': '🌦️',
+                '中雨': '🌧️',
+                '大雨': '⛈️',
+                '雪': '❄️',
+                '小雪': '🌨️',
+                '雾': '🌫️',
+                '霾': '🌫️'
+            };
+            return map[weather] || '🌤️';
+        }
+
+        function handleCityKeyPress(event) {
+            if (event.key === 'Enter') {
+                const city = document.getElementById('cityInput').value;
+                queryWeather(city);
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        userInput.focus();
+    </script>
+</body>
+</html>

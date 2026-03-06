@@ -1,0 +1,23 @@
+﻿{
+  "mcpServers":
+  {
+    "baidu-map":
+    {
+
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@baidumap/mcp-server-baidu-map"],
+      "env":  {"BAIDU_MAP_API_KEY": "${BAIDU_MAP_API_KEY}"}
+    }
+  }
+}
+
+// 鏋勫缓McpTransport鍗忚
+
+//cmd锛氬惎鍔?Windows 鍛戒护琛岃В閲婂櫒銆?
+///c锛氬憡璇?cmd 鎵ц瀹屽悗闈㈢殑鍛戒护鍚庡叧闂嚜韬€?
+//npx锛歯px = npm execute package锛孨ode.js 鐨勪竴涓伐鍏凤紝鐢ㄤ簬鎵ц npm 鍖呬腑鐨勫彲鎵ц鏂囦欢銆?
+//-y 鎴?--yes锛氳嚜鍔ㄧ‘璁ゆ搷浣滐紙绫讳技浜庨粯璁ゆ帴鍙楁墍鏈夋彁绀猴級銆?
+//@baidumap/mcp-server-baidu-map锛氳閫氳繃 npx 鎵ц鐨?npm 鍖呭悕
+//BAIDU_MAP_API_KEY 鏄闂櫨搴﹀湴鍥惧紑鏀惧钩鍙癆PI鐨凙K
+
+

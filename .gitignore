@@ -1,0 +1,21 @@
+﻿# Build outputs
+**/target/
+**/bin/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local secret config (keep template files only)
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+**/application-secret.properties
+**/application-secret.yml
+**/application-secret.yaml
+**/config/*.local.properties
